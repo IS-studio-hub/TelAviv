@@ -282,6 +282,10 @@ function sitOnGround(model) {
   model.position.y -= fitted.min.y;
 }
 
+function modelUrl(file) {
+  return `${import.meta.env.BASE_URL}models/${file}`;
+}
+
 function loadGltf(url, onProgress) {
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -331,7 +335,7 @@ async function loadFitted(url, { height, longest } = {}, onProgress) {
 }
 
 export async function loadCar(onProgress) {
-  const model = await loadFitted('/models/car.glb', { longest: 4.6 }, onProgress);
+  const model = await loadFitted(modelUrl('car.glb'), { longest: 4.6 }, onProgress);
   return wrap(model);
 }
 
@@ -371,23 +375,23 @@ export async function loadStreet(onProgress) {
   };
 
   const [apartmentMesh, palmMesh, bikeMesh, wayfinderMesh, lampMesh, car] = await Promise.all([
-    loadFitted('/models/apartment.glb', { height: 12.4 }, (ratio) => {
+    loadFitted(modelUrl('apartment.glb'), { height: 12.4 }, (ratio) => {
       loaded.apartment = ratio;
       report();
     }),
-    loadFitted('/models/palm.glb', { height: 15.4 }, (ratio) => {
+    loadFitted(modelUrl('palm.glb'), { height: 15.4 }, (ratio) => {
       loaded.palm = ratio;
       report();
     }),
-    loadFitted('/models/bike.glb', { longest: 2.15 }, (ratio) => {
+    loadFitted(modelUrl('bike.glb'), { longest: 2.15 }, (ratio) => {
       loaded.bike = ratio;
       report();
     }),
-    loadFitted('/models/wayfinder.glb', { height: 8.6 }, (ratio) => {
+    loadFitted(modelUrl('wayfinder.glb'), { height: 8.6 }, (ratio) => {
       loaded.wayfinder = ratio;
       report();
     }),
-    loadFitted('/models/lamp.glb', { height: 11.3 }, (ratio) => {
+    loadFitted(modelUrl('lamp.glb'), { height: 11.3 }, (ratio) => {
       loaded.lamp = ratio;
       report();
     }),
