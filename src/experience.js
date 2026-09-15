@@ -95,6 +95,7 @@ export class Experience {
     this.pointer = new THREE.Vector2();
     this.raycaster = new THREE.Raycaster();
     this.size = { width: window.innerWidth, height: window.innerHeight };
+    this.press = null;
 
     onProgress?.(0.12);
     this.renderer = new THREE.WebGLRenderer({
@@ -279,11 +280,9 @@ export class Experience {
   bind() {
     window.addEventListener('resize', () => this.resize());
     this.canvas.addEventListener('pointermove', (event) => this.onPointerMove(event));
-    this.canvas.addEventListener('pointerdown', () => document.body.classList.add('is-dragging'));
-    this.canvas.addEventListener('pointerup', (event) => {
-      document.body.classList.remove('is-dragging');
-      this.onPointerUp(event);
-    });
+    this.canvas.addEventListener('pointerdown', (event) => this.onPointerDown(event));
+    this.canvas.addEventListener('pointerup', (event) => this.onPointerUp(event));
+    this.canvas.addEventListener('pointercancel', (event) => this.onPointerUp(event, true));
   }
 
   resize() {
@@ -295,7 +294,24 @@ export class Experience {
     this.composer.setSize(this.size.width, this.size.height);
   }
 
+  onPointerDown(event) {
+    if (event.button !== 0 && event.pointerType === 'mouse') return;
+    this.press = { x: event.clientX, y: event.clientY, dragged: false, id: event.pointerId };
+    this.canvas.setPointerCapture(event.pointerId);
+    document.body.classList.add('is-dragging');
+  }
+
   onPointerMove(event) {
+    if (this.press && !this.press.dragged) {
+      const dx = event.clientX - this.press.x;
+      const dy = event.clientY - this.press.y;
+      if (dx * dx + dy * dy > 64) this.press.dragged = true;
+    }
+    if (this.press?.dragged) {
+      document.body.classList.toggle('is-hovering', false);
+      this.onHover?.(null);
+      return;
+    }
     this.pointer.x = (event.clientX / this.size.width) * 2 - 1;
     this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
@@ -305,7 +321,23 @@ export class Experience {
     this.onHover?.(id, event.clientX, event.clientY);
   }
 
-  onPointerUp(event) {
+  onPointerUp(event, cancelled = false) {
+    const press = this.press;
+    this.press = null;
+    document.body.classList.remove('is-dragging');
+    document.body.classList.remove('is-hovering');
+    this.onHover?.(null);
+    if (press) {
+      try {
+        if (this.canvas.hasPointerCapture(press.id)) {
+          this.canvas.releasePointerCapture(press.id);
+        }
+      } catch {
+        /* already released */
+      }
+    }
+    if (cancelled || !press || press.dragged) return;
+
     this.pointer.x = (event.clientX / this.size.width) * 2 - 1;
     this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);

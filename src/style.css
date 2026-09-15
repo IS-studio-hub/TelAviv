@@ -32,6 +32,11 @@ body.is-dragging {
   cursor: grabbing;
 }
 
+body.is-dragging .dock,
+body.is-dragging .panel-close {
+  pointer-events: none;
+}
+
 canvas#scene {
   display: block;
   width: 100%;

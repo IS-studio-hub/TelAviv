@@ -367,14 +367,14 @@ function cameraFor(target, { back = 6, height = 2.4, side = 0.6 } = {}) {
 }
 
 export async function loadStreet(onProgress) {
-  const loaded = { apartment: 0, palm: 0, bike: 0, wayfinder: 0, lamp: 0, car: 0 };
-  const weights = { apartment: 0.34, palm: 0.28, bike: 0.12, wayfinder: 0.08, lamp: 0.06, car: 0.12 };
+  const loaded = { apartment: 0, palm: 0, bike: 0, wayfinder: 0, lamp: 0, car: 0, dumpster: 0 };
+  const weights = { apartment: 0.32, palm: 0.26, bike: 0.11, wayfinder: 0.07, lamp: 0.06, car: 0.11, dumpster: 0.07 };
   const report = () => {
     const total = Object.entries(weights).reduce((sum, [key, weight]) => sum + loaded[key] * weight, 0);
     onProgress?.(total);
   };
 
-  const [apartmentMesh, palmMesh, bikeMesh, wayfinderMesh, lampMesh, car] = await Promise.all([
+  const [apartmentMesh, palmMesh, bikeMesh, wayfinderMesh, lampMesh, car, dumpsterMesh] = await Promise.all([
     loadFitted(modelUrl('apartment.glb'), { height: 12.4 }, (ratio) => {
       loaded.apartment = ratio;
       report();
@@ -399,17 +399,23 @@ export async function loadStreet(onProgress) {
       loaded.car = ratio;
       report();
     }),
+    loadFitted(modelUrl('dumpster.glb'), { height: 2.35 }, (ratio) => {
+      loaded.dumpster = ratio;
+      report();
+    }),
   ]);
 
   pinBase(palmMesh);
   pinBase(wayfinderMesh);
   pinBase(lampMesh);
+  pinBase(dumpsterMesh);
 
   const apartment = wrap(apartmentMesh);
   const palm = wrap(palmMesh);
   const bike = wrap(bikeMesh);
   const wayfinder = wrap(wayfinderMesh);
   const lamp = wrap(lampMesh);
+  const dumpster = wrap(dumpsterMesh);
   palm.userData.sway = Math.random() * Math.PI * 2;
 
   apartment.updateMatrixWorld(true);
@@ -431,10 +437,12 @@ export async function loadStreet(onProgress) {
   bike.position.y += walkY - bikeBox.min.y + 0.02;
   car.rotation.y = -0.12;
   car.position.set(apt.max.x + 3.6, 0.02, apt.max.z + 1.6);
+  dumpster.rotation.y = Math.PI / 2;
+  dumpster.position.set(apt.max.x + 1.05, 0, apt.max.z - 2.7);
 
   const root = new THREE.Group();
   root.name = 'street';
-  root.add(apartment, palm, wayfinder, lamp, bike, car);
+  root.add(apartment, palm, wayfinder, lamp, bike, dumpster, car);
 
   lamp.updateMatrixWorld(true);
   addLampLight(

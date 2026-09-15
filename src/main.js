@@ -125,13 +125,87 @@ start.addEventListener('click', async () => {
   await experience.intro();
 });
 
-document.querySelector('.panel-close').addEventListener('click', () => {
+const CLICK_SLOP = 8;
+let hudPress = null;
+let draggedGesture = false;
+let pointerHeld = false;
+let gestureOrigin = { x: 0, y: 0 };
+
+window.addEventListener(
+  'pointerdown',
+  (event) => {
+    pointerHeld = true;
+    draggedGesture = false;
+    gestureOrigin = { x: event.clientX, y: event.clientY };
+  },
+  true
+);
+
+window.addEventListener(
+  'pointermove',
+  (event) => {
+    if (!pointerHeld || draggedGesture) return;
+    const dx = event.clientX - gestureOrigin.x;
+    const dy = event.clientY - gestureOrigin.y;
+    if (dx * dx + dy * dy > CLICK_SLOP * CLICK_SLOP) draggedGesture = true;
+  },
+  true
+);
+
+window.addEventListener(
+  'pointerup',
+  () => {
+    pointerHeld = false;
+    requestAnimationFrame(() => {
+      draggedGesture = false;
+    });
+  },
+  true
+);
+
+window.addEventListener(
+  'click',
+  (event) => {
+    if (!draggedGesture) return;
+    if (event.target.closest('.dock, .panel-close')) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  },
+  true
+);
+
+function isIntentionalClick(event, target) {
+  if (draggedGesture) return false;
+  if (!hudPress || (target && hudPress.target !== target)) {
+    hudPress = null;
+    return false;
+  }
+  const dx = event.clientX - hudPress.x;
+  const dy = event.clientY - hudPress.y;
+  hudPress = null;
+  return dx * dx + dy * dy <= CLICK_SLOP * CLICK_SLOP;
+}
+
+const panelClose = document.querySelector('.panel-close');
+panelClose.addEventListener('pointerdown', (event) => {
+  hudPress = { x: event.clientX, y: event.clientY, target: panelClose };
+});
+panelClose.addEventListener('click', (event) => {
+  if (!isIntentionalClick(event, panelClose)) return;
   goTo('street');
+});
+
+dock.addEventListener('pointerdown', (event) => {
+  const button = event.target.closest('button[data-view]');
+  if (!button) return;
+  hudPress = { x: event.clientX, y: event.clientY, target: button };
 });
 
 dock.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-view]');
-  if (button) goTo(button.dataset.view);
+  if (!button || !isIntentionalClick(event, button)) return;
+  goTo(button.dataset.view);
 });
 
 await document.fonts.ready;
