@@ -42,11 +42,87 @@ const RESTAURANTS = [
   { name: 'Manta Ray', tag: 'Beach · breakfast', blurb: 'On the sand. Eggs and fish with the sea. This week’s morning table.' },
 ];
 
+const TRASH = [
+  {
+    kind: 'TikTok',
+    title: 'The Dizengoff story that would not die',
+    who: 'A waiter → the table → 400k viewers',
+    blurb: 'Someone filmed a couple fighting over the bill outside a Rothschild wine bar. She said he always “forgets” his card. He said she always “forgets” she invited her friends. The comments picked a side by Tuesday.',
+  },
+  {
+    kind: 'Instagram',
+    title: 'Who unfollowed who after the roof',
+    who: 'A DJ → a promoter, 02:14',
+    blurb: 'Hive afterparty. He posted a story: “don’t book me if you don’t pay me.” She replied on her close friends: “don’t no-show and then ask for cash.” By morning both stories were gone. The screenshot is not.',
+  },
+  {
+    kind: 'Article',
+    title: 'Peni ran the hotel elevator clip',
+    who: 'Gossip desk → a TV host, Friday',
+    blurb: 'A clip from a seafront hotel: two familiar faces, one floor too high, one sentence too loud. The column did not name the room. The city already knew the floor.',
+  },
+  {
+    kind: 'Reel',
+    title: '“Don’t sit with them” — Gordon beach',
+    who: 'A fitness creator → an actress',
+    blurb: 'She filmed sunrise abs, then panned to a towel two metres away. No name. The caption: “some people do pilates, some people do press.” The actress stitched it with “some people need a hobby.”',
+  },
+  {
+    kind: 'X',
+    title: 'The chef clapped back at 08:03',
+    who: 'A food account → a kitchen on Begin',
+    blurb: 'Review: “overrated, cold fish, waiters on their phones.” The restaurant quote-tweeted a ticket from Saturday: the same handle, the same table, a 40% no-show. Then they muted the thread.',
+  },
+  {
+    kind: 'TikTok',
+    title: 'Namal parking as a personality test',
+    who: 'A port creator → every driver in the comments',
+    blurb: 'He asked why Tel Aviv men parallel park like they are in a music video. 1.2M views. Half the comments are women tagging boyfriends. The other half is the boyfriends explaining the curb.',
+  },
+  {
+    kind: 'Story',
+    title: 'She said it on close friends, not to him',
+    who: 'An influencer → an actor, Wednesday night',
+    blurb: 'Florentin rooftop. She posted 14 seconds: “if you bring her you don’t bring me.” He was still in the frame pouring wine. He found out from a group chat, not from her.',
+  },
+  {
+    kind: 'Reel',
+    title: 'The guest list that leaked',
+    who: 'A publicist → a singer',
+    blurb: 'Private dinner, 19 seats, no phones. Someone still posted the menu and three first names. The singer’s manager called it “a small room.” The city called it a seating chart.',
+  },
+  {
+    kind: 'TikTok',
+    title: 'Shabbat in Florentin, phones out',
+    who: 'A visitor → the neighbours',
+    blurb: 'They filmed a silent street at 18:40 and asked if the city was “broken.” Locals stitched it: the city is not broken, it is Friday. The original is still up. The stitches are funnier.',
+  },
+  {
+    kind: 'Article',
+    title: 'Who sat where at the holiday table',
+    who: 'A weekend magazine → two presenters',
+    blurb: 'Rosh Hashana seating as sport. One host was not at the family table they always post. Another was, with a plus-one the caption refused to name. The why is the whole piece.',
+  },
+  {
+    kind: 'Instagram',
+    title: 'The “just a friend” in the booth',
+    who: 'A footballer → a model, Sunday brunch',
+    blurb: 'Manta Ray, 11:20. His story was the sea. Hers was the back of his neck. By noon both archives were clean. The other tables had already taken the photo.',
+  },
+  {
+    kind: 'TikTok',
+    title: 'Allenby at 03:00, no context',
+    who: 'A nightlife account → a minister’s kid',
+    blurb: 'Blurry reel, loud audio, one very recognisable jacket. They asked “who is this.” The comments answered in under four minutes. He said he was “just walking.” The clip is 19 seconds of not walking.',
+  },
+];
+
 export const hotspotCopy = {
   roof: 'Roof parties this week',
   bike: 'How to move around',
   door: 'Where to eat this week',
   car: 'Parking this week',
+  dumpster: 'This week’s trash',
 };
 
 export function buildViews(ctx) {
@@ -68,6 +144,8 @@ export function buildViews(ctx) {
   const roofC = pick(ROOFS, week.key, 4);
   const roofD = pick(ROOFS, week.key, 6);
   const tables = pickMany(RESTAURANTS, week.key, 5);
+  const tea = pickMany(TRASH, week.key, 6);
+  const teaDays = [thu, fri, sat, week.days[1], week.days[2], week.days[0]].map((d) => d ?? week.days[0]);
 
   return {
     street: {
@@ -205,6 +283,26 @@ export function buildViews(ctx) {
           </article>
         </div>
         <p class="fine">Rules for ${label}. Pay with Pango.</p>
+      `,
+    },
+    dumpster: {
+      kicker: `Trash · ${label}`,
+      title: 'What the city is whispering',
+      html: `
+        <p class="lede">Who said what to who, when, and why — for ${label} only. Posts, reels, TikToks, stories, columns. ${closedLine}</p>
+        <div class="cards">
+          ${tea
+            .map(
+              (item, i) => `
+          <article class="card">
+            <p class="card-tag">${item.kind} · ${teaDays[i] ? `${teaDays[i].weekday} ${teaDays[i].label}` : 'this week'}</p>
+            <h3>${item.title}</h3>
+            <p><strong>${item.who}</strong>. ${item.blurb}</p>
+          </article>`
+            )
+            .join('')}
+        </div>
+        <p class="fine">Street tea for ${label}. Rotates every Sunday. Not a news desk — the dumpster does not fact-check.</p>
       `,
     },
   };

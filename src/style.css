@@ -179,9 +179,10 @@ canvas#scene {
   color: rgba(255, 246, 228, 0.8);
   font: 500 0.82rem Outfit, sans-serif;
   letter-spacing: 0.04em;
-  padding: 10px 14px;
+  padding: 10px 12px;
   border-radius: 999px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .dock button.is-active,

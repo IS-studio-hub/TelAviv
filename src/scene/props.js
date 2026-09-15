@@ -351,6 +351,13 @@ function addHit(parent, size, worldPos, id) {
   return hit;
 }
 
+function tagHotspot(object, id) {
+  object.userData.hotspot = id;
+  object.traverse((child) => {
+    child.userData.hotspot = id;
+  });
+}
+
 function cameraFor(target, { back = 6, height = 2.4, side = 0.6 } = {}) {
   return {
     position: {
@@ -478,16 +485,28 @@ export async function loadStreet(onProgress) {
   const carSize = carBounds.getSize(new THREE.Vector3());
   const carHit = addHit(
     car,
-    { x: carSize.x + 0.6, y: carSize.y + 0.5, z: carSize.z + 0.6 },
+    { x: carSize.x + 0.25, y: carSize.y + 0.3, z: carSize.z + 0.25 },
     carCenter,
     'car'
+  );
+
+  dumpster.updateMatrixWorld(true);
+  const dumpBounds = new THREE.Box3().setFromObject(dumpster);
+  const dumpCenter = dumpBounds.getCenter(new THREE.Vector3());
+  const dumpSize = dumpBounds.getSize(new THREE.Vector3());
+  tagHotspot(dumpster, 'dumpster');
+  const dumpHit = addHit(
+    root,
+    { x: dumpSize.x + 1.1, y: dumpSize.y + 0.8, z: dumpSize.z + 1.1 },
+    dumpCenter,
+    'dumpster'
   );
 
   return {
     root,
     palm,
     size: dim,
-    hotspots: [roofHit, doorHit, bikeHit, carHit],
+    hotspots: [dumpHit, dumpster, roofHit, doorHit, bikeHit, carHit],
     cameras: {
       street: {
         position: { x: -1.8, y: 7.3, z: 26.2 },
@@ -497,6 +516,7 @@ export async function loadStreet(onProgress) {
       door: cameraFor(doorWorld, { back: 5.6, height: 0.7, side: 0.25 }),
       bike: cameraFor(bikeCenter, { back: 4.2, height: 1.55, side: 1.5 }),
       car: cameraFor(carCenter, { back: 5.4, height: 1.9, side: 2.4 }),
+      dumpster: cameraFor(dumpCenter, { back: 5.1, height: 1.65, side: 2.6 }),
     },
   };
 }

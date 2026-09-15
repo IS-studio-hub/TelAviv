@@ -298,25 +298,44 @@ export class Experience {
     if (event.button !== 0 && event.pointerType === 'mouse') return;
     this.press = { x: event.clientX, y: event.clientY, dragged: false, id: event.pointerId };
     this.canvas.setPointerCapture(event.pointerId);
-    document.body.classList.add('is-dragging');
+  }
+
+  hotspotId(object) {
+    let node = object;
+    while (node) {
+      if (node.userData?.hotspot) return node.userData.hotspot;
+      node = node.parent;
+    }
+    return null;
+  }
+
+  pickHotspot(event) {
+    this.pointer.x = (event.clientX / this.size.width) * 2 - 1;
+    this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const hits = this.raycaster.intersectObjects(this.hotspots, true);
+    for (const hit of hits) {
+      const id = this.hotspotId(hit.object);
+      if (id) return id;
+    }
+    return null;
   }
 
   onPointerMove(event) {
     if (this.press && !this.press.dragged) {
       const dx = event.clientX - this.press.x;
       const dy = event.clientY - this.press.y;
-      if (dx * dx + dy * dy > 64) this.press.dragged = true;
+      if (dx * dx + dy * dy > 256) {
+        this.press.dragged = true;
+        document.body.classList.add('is-dragging');
+      }
     }
     if (this.press?.dragged) {
       document.body.classList.toggle('is-hovering', false);
       this.onHover?.(null);
       return;
     }
-    this.pointer.x = (event.clientX / this.size.width) * 2 - 1;
-    this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hit = this.raycaster.intersectObjects(this.hotspots, false)[0];
-    const id = hit?.object.userData.hotspot ?? null;
+    const id = this.pickHotspot(event);
     document.body.classList.toggle('is-hovering', Boolean(id));
     this.onHover?.(id, event.clientX, event.clientY);
   }
@@ -338,13 +357,8 @@ export class Experience {
     }
     if (cancelled || !press || press.dragged) return;
 
-    this.pointer.x = (event.clientX / this.size.width) * 2 - 1;
-    this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hit = this.raycaster.intersectObjects(this.hotspots, false)[0];
-    if (hit?.object.userData.hotspot) {
-      this.onSelect?.(hit.object.userData.hotspot);
-    }
+    const id = this.pickHotspot(event);
+    if (id) this.onSelect?.(id);
   }
 
   async intro() {
