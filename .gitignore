@@ -1,0 +1,7 @@
+node_modules
+dist
+.DS_Store
+*.local
+models-source
+referance
+Meshy_AI_*.glb
