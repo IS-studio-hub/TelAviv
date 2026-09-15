@@ -122,7 +122,7 @@ export const hotspotCopy = {
   bike: 'How to move around',
   door: 'Where to eat this week',
   car: 'Parking this week',
-  dumpster: 'This week’s trash',
+  dumpster: 'This week’s trash — celebs, posts, TikToks',
 };
 
 export function buildViews(ctx) {
@@ -287,9 +287,9 @@ export function buildViews(ctx) {
     },
     dumpster: {
       kicker: `Trash · ${label}`,
-      title: 'What the city is whispering',
+      title: 'This week’s trash',
       html: `
-        <p class="lede">Who said what to who, when, and why — for ${label} only. Posts, reels, TikToks, stories, columns. ${closedLine}</p>
+        <p class="lede">Social, celebrities, who said what to who, when and why. Articles, posts, reels, TikToks — in Tel Aviv, ${label} only. ${closedLine}</p>
         <div class="cards">
           ${tea
             .map(

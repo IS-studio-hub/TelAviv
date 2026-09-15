@@ -497,7 +497,7 @@ export async function loadStreet(onProgress) {
   tagHotspot(dumpster, 'dumpster');
   const dumpHit = addHit(
     root,
-    { x: dumpSize.x + 1.1, y: dumpSize.y + 0.8, z: dumpSize.z + 1.1 },
+    { x: dumpSize.x + 2.4, y: dumpSize.y + 1.6, z: dumpSize.z + 2.4 },
     dumpCenter,
     'dumpster'
   );
@@ -516,7 +516,18 @@ export async function loadStreet(onProgress) {
       door: cameraFor(doorWorld, { back: 5.6, height: 0.7, side: 0.25 }),
       bike: cameraFor(bikeCenter, { back: 4.2, height: 1.55, side: 1.5 }),
       car: cameraFor(carCenter, { back: 5.4, height: 1.9, side: 2.4 }),
-      dumpster: cameraFor(dumpCenter, { back: 5.1, height: 1.65, side: 2.6 }),
+      dumpster: {
+        position: {
+          x: dumpCenter.x - 0.35,
+          y: dumpCenter.y + 2.35,
+          z: dumpCenter.z + 6.4,
+        },
+        target: {
+          x: dumpCenter.x,
+          y: dumpCenter.y + 0.55,
+          z: dumpCenter.z,
+        },
+      },
     },
   };
 }

@@ -314,11 +314,15 @@ export class Experience {
     this.pointer.y = -(event.clientY / this.size.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const hits = this.raycaster.intersectObjects(this.hotspots, true);
+    const ids = [];
     for (const hit of hits) {
       const id = this.hotspotId(hit.object);
-      if (id) return id;
+      if (id && !ids.includes(id)) ids.push(id);
     }
-    return null;
+    for (const id of ['dumpster', 'bike', 'door', 'car', 'roof']) {
+      if (ids.includes(id)) return id;
+    }
+    return ids[0] ?? null;
   }
 
   onPointerMove(event) {

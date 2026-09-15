@@ -107,8 +107,9 @@ function boot() {
       }
       hoverLabel.hidden = false;
       hoverLabel.textContent = hotspotCopy[id] ?? id;
-      hoverLabel.style.left = `${x}px`;
-      hoverLabel.style.top = `${y}px`;
+      const pad = 24;
+      hoverLabel.style.left = `${Math.min(window.innerWidth - pad, Math.max(pad, x))}px`;
+      hoverLabel.style.top = `${Math.min(window.innerHeight - 72, Math.max(36, y))}px`;
     },
     onSelect(id) {
       goTo(id);
