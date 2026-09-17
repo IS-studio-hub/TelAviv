@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Dizengoff 23 — This week in Tel Aviv</title>
     <meta
       name="description"
@@ -34,14 +34,19 @@
         <p class="credit-role" id="cycle-label"></p>
       </aside>
 
-      <nav class="dock" aria-label="Explore">
-        <button data-view="street" class="is-active">Street</button>
-        <button data-view="roof">Roof</button>
-        <button data-view="bike">Ride</button>
-        <button data-view="door">Eat</button>
-        <button data-view="car">Park</button>
-        <button data-view="dumpster">Trash</button>
-      </nav>
+      <div class="explore-menu">
+        <nav class="dock" id="explore-dock" aria-label="Explore">
+          <button data-view="street" class="is-active">Street</button>
+          <button data-view="roof">Roof</button>
+          <button data-view="bike">Ride</button>
+          <button data-view="door">Eat</button>
+          <button data-view="car">Park</button>
+          <button data-view="dumpster">Trash</button>
+        </nav>
+        <button class="menu-toggle" type="button" aria-controls="explore-dock" aria-expanded="false" aria-label="Open menu">
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+      </div>
     </div>
 
     <article id="panel" hidden>

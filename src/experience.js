@@ -78,11 +78,13 @@ function mix(a, b, t) {
 }
 
 export class Experience {
-  constructor(canvas, { onProgress, onHover, onSelect } = {}) {
+  constructor(canvas, { onProgress, onHover, onSelect, touchNav = false } = {}) {
     this.canvas = canvas;
     this.onHover = onHover;
     this.onSelect = onSelect;
     this.onProgressHook = onProgress;
+    this.touchNav = touchNav;
+    this.touchCount = 0;
     this.clock = new THREE.Clock();
     this.hotspots = [];
     this.palms = [];
@@ -128,6 +130,7 @@ export class Experience {
     this.controls.minAzimuthAngle = -0.7;
     this.controls.maxAzimuthAngle = 0.85;
     this.controls.enabled = false;
+    if (this.touchNav) this.applyTouchNav();
 
     onProgress?.(0.28);
     const textures = createTextures();
@@ -283,6 +286,35 @@ export class Experience {
     this.canvas.addEventListener('pointerdown', (event) => this.onPointerDown(event));
     this.canvas.addEventListener('pointerup', (event) => this.onPointerUp(event));
     this.canvas.addEventListener('pointercancel', (event) => this.onPointerUp(event, true));
+    this.canvas.addEventListener('gesturestart', (event) => event.preventDefault());
+    this.canvas.addEventListener('gesturechange', (event) => event.preventDefault());
+  }
+
+  applyTouchNav() {
+    this.touchNav = true;
+    this.controls.enablePan = this.view === 'street';
+    this.controls.screenSpacePanning = true;
+    this.controls.panSpeed = 1.1;
+    this.controls.enableZoom = false;
+    this.controls.rotateSpeed = 0.72;
+    this.controls.touches.ONE = THREE.TOUCH.PAN;
+    this.controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
+    this.controls.minAzimuthAngle = -Math.PI;
+    this.controls.maxAzimuthAngle = Math.PI;
+    this.controls.minPolarAngle = 0.42;
+    this.controls.maxPolarAngle = 1.48;
+    this.controls.minDistance = 6;
+    this.controls.maxDistance = 42;
+    if (!this._touchClampBound) {
+      this._touchClampBound = () => this.clampLook();
+      this.controls.addEventListener('change', this._touchClampBound);
+    }
+    this.syncStreetControls(this.view === 'street');
+  }
+
+  enableTouchNav() {
+    if (this.touchNav) return;
+    this.applyTouchNav();
   }
 
   resize() {
@@ -294,8 +326,35 @@ export class Experience {
     this.composer.setSize(this.size.width, this.size.height);
   }
 
+  clampLook() {
+    const t = this.controls.target;
+    const ox = this.camera.position.x - t.x;
+    const oy = this.camera.position.y - t.y;
+    const oz = this.camera.position.z - t.z;
+    t.x = THREE.MathUtils.clamp(t.x, -14, 14);
+    t.y = THREE.MathUtils.clamp(t.y, 0.8, 12);
+    t.z = THREE.MathUtils.clamp(t.z, -10, 24);
+    this.camera.position.set(t.x + ox, t.y + oy, t.z + oz);
+  }
+
+  syncStreetControls(onStreet) {
+    this.controls.enableRotate = onStreet;
+    this.controls.enableZoom = onStreet && !this.touchNav;
+    this.controls.enablePan = onStreet && this.touchNav;
+  }
+
   onPointerDown(event) {
     if (event.button !== 0 && event.pointerType === 'mouse') return;
+    if (event.pointerType !== 'mouse') {
+      this.touchCount += 1;
+      this.press = {
+        x: event.clientX,
+        y: event.clientY,
+        dragged: this.touchCount > 1,
+        id: event.pointerId,
+      };
+      return;
+    }
     this.press = { x: event.clientX, y: event.clientY, dragged: false, id: event.pointerId };
     this.canvas.setPointerCapture(event.pointerId);
   }
@@ -345,12 +404,17 @@ export class Experience {
   }
 
   onPointerUp(event, cancelled = false) {
+    if (event.pointerType !== 'mouse') {
+      this.touchCount = Math.max(0, this.touchCount - 1);
+    }
     const press = this.press;
-    this.press = null;
-    document.body.classList.remove('is-dragging');
-    document.body.classList.remove('is-hovering');
-    this.onHover?.(null);
-    if (press) {
+    if (this.touchCount === 0) {
+      this.press = null;
+      document.body.classList.remove('is-dragging');
+      document.body.classList.remove('is-hovering');
+      this.onHover?.(null);
+    }
+    if (press && event.pointerType !== 'touch') {
       try {
         if (this.canvas.hasPointerCapture(press.id)) {
           this.canvas.releasePointerCapture(press.id);
@@ -359,7 +423,7 @@ export class Experience {
         /* already released */
       }
     }
-    if (cancelled || !press || press.dragged) return;
+    if (cancelled || !press || press.dragged || this.touchCount > 0) return;
 
     const id = this.pickHotspot(event);
     if (id) this.onSelect?.(id);
@@ -374,8 +438,7 @@ export class Experience {
   flyTo(name, duration = 1.6) {
     const view = this.views[name] ?? this.views.street;
     this.view = name;
-    this.controls.enableRotate = false;
-    this.controls.enableZoom = false;
+    this.syncStreetControls(false);
     return new Promise((resolve) => {
       gsap.to(this.camera.position, {
         duration,
@@ -387,8 +450,7 @@ export class Experience {
         ease: 'power2.inOut',
         ...view.target,
         onComplete: () => {
-          this.controls.enableRotate = name === 'street';
-          this.controls.enableZoom = name === 'street';
+          this.syncStreetControls(name === 'street');
           resolve();
         },
       });

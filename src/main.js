@@ -3,6 +3,27 @@ import { Experience } from './experience.js';
 import { buildViews, hotspotCopy } from './content.js';
 import { currentWeek, formatClock, loadTelAvivWeek, nightnessAt } from './telaviv.js';
 
+let touchUi =
+  new URLSearchParams(location.search).has('touch') ||
+  navigator.maxTouchPoints > 0 ||
+  window.matchMedia('(any-pointer: coarse)').matches;
+if (touchUi) document.documentElement.classList.add('is-touch');
+
+function setTouchHint() {
+  const hint = document.querySelector('#hint');
+  if (hint) {
+    hint.textContent =
+      'Slide to move · Two fingers to look around · Tap the roof, bike, door, car, or trash';
+  }
+}
+
+function activateTouchUi() {
+  touchUi = true;
+  document.documentElement.classList.add('is-touch');
+  experience?.enableTouchNav();
+  if (hud && !hud.hidden) setTouchHint();
+}
+
 const loader = document.querySelector('#loader');
 const status = document.querySelector('#loader-status');
 const pctEl = document.querySelector('#loader-pct');
@@ -13,6 +34,8 @@ const panelKicker = document.querySelector('#panel-kicker');
 const panelTitle = document.querySelector('#panel-title');
 const panelBody = document.querySelector('#panel-body');
 const hoverLabel = document.querySelector('#hover-label');
+const menu = document.querySelector('.explore-menu');
+const menuToggle = document.querySelector('.menu-toggle');
 const dock = document.querySelector('.dock');
 const weekLabel = document.querySelector('#week-label');
 const cycleLabel = document.querySelector('#cycle-label');
@@ -66,8 +89,24 @@ function closePanel() {
   });
 }
 
+function closeMenu() {
+  menu.classList.remove('is-open');
+  document.documentElement.classList.remove('explore-open');
+  menuToggle.setAttribute('aria-expanded', 'false');
+  menuToggle.setAttribute('aria-label', 'Open menu');
+}
+
+function toggleMenu() {
+  const open = !menu.classList.contains('is-open');
+  menu.classList.toggle('is-open', open);
+  document.documentElement.classList.toggle('explore-open', open);
+  menuToggle.setAttribute('aria-expanded', String(open));
+  menuToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+}
+
 async function goTo(id) {
   if (!experience) return;
+  closeMenu();
   openPanel(id);
   await experience.flyTo(id);
 }
@@ -100,6 +139,7 @@ function boot() {
   applyLive({ week: currentWeek(), holidays: [], sunrise: null, sunset: null, clock: formatClock() });
   experience = new Experience(document.querySelector('#scene'), {
     onProgress: setProgress,
+    touchNav: touchUi,
     onHover(id, x, y) {
       if (!id) {
         hoverLabel.hidden = true;
@@ -123,6 +163,9 @@ start.addEventListener('click', async () => {
   await experience.ready;
   loader.classList.add('is-gone');
   hud.hidden = false;
+  if (document.documentElement.classList.contains('is-touch')) {
+    setTouchHint();
+  }
   await experience.intro();
 });
 
@@ -135,6 +178,7 @@ let gestureOrigin = { x: 0, y: 0 };
 window.addEventListener(
   'pointerdown',
   (event) => {
+    if (event.pointerType === 'touch') activateTouchUi();
     pointerHeld = true;
     draggedGesture = false;
     gestureOrigin = { x: event.clientX, y: event.clientY };
@@ -168,7 +212,7 @@ window.addEventListener(
   'click',
   (event) => {
     if (!draggedGesture) return;
-    if (event.target.closest('.dock, .panel-close')) {
+    if (event.target.closest('.dock, .panel-close, .menu-toggle')) {
       event.preventDefault();
       event.stopPropagation();
     }
@@ -195,6 +239,22 @@ panelClose.addEventListener('pointerdown', (event) => {
 panelClose.addEventListener('click', (event) => {
   if (!isIntentionalClick(event, panelClose)) return;
   goTo('street');
+});
+
+menuToggle.addEventListener('pointerdown', (event) => {
+  event.stopPropagation();
+  hudPress = { x: event.clientX, y: event.clientY, target: menuToggle };
+});
+
+menuToggle.addEventListener('click', (event) => {
+  event.stopPropagation();
+  if (!isIntentionalClick(event, menuToggle)) return;
+  toggleMenu();
+});
+
+document.addEventListener('pointerdown', (event) => {
+  if (!menu.classList.contains('is-open')) return;
+  if (!menu.contains(event.target)) closeMenu();
 });
 
 dock.addEventListener('pointerdown', (event) => {
