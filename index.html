@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Dizengoff 23 — This week in Tel Aviv</title>
     <meta
       name="description"
@@ -14,8 +14,8 @@
       href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Heebo:wght@500;700;800&family=Outfit:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/TelAviv/assets/index-Ba9D91eb.js"></script>
-    <link rel="stylesheet" crossorigin href="/TelAviv/assets/index-D1kwhzTx.css">
+    <script type="module" crossorigin src="/TelAviv/assets/index-SQLeebiK.js"></script>
+    <link rel="stylesheet" crossorigin href="/TelAviv/assets/index-CZ0qlv32.css">
   </head>
   <body>
     <canvas id="scene"></canvas>
@@ -36,14 +36,19 @@
         <p class="credit-role" id="cycle-label"></p>
       </aside>
 
-      <nav class="dock" aria-label="Explore">
-        <button data-view="street" class="is-active">Street</button>
-        <button data-view="roof">Roof</button>
-        <button data-view="bike">Ride</button>
-        <button data-view="door">Eat</button>
-        <button data-view="car">Park</button>
-        <button data-view="dumpster">Trash</button>
-      </nav>
+      <div class="explore-menu">
+        <nav class="dock" id="explore-dock" aria-label="Explore">
+          <button data-view="street" class="is-active">Street</button>
+          <button data-view="roof">Roof</button>
+          <button data-view="bike">Ride</button>
+          <button data-view="door">Eat</button>
+          <button data-view="car">Park</button>
+          <button data-view="dumpster">Trash</button>
+        </nav>
+        <button class="menu-toggle" type="button" aria-controls="explore-dock" aria-expanded="false" aria-label="Open menu">
+          <span class="burger" aria-hidden="true"></span>
+        </button>
+      </div>
     </div>
 
     <article id="panel" hidden>
